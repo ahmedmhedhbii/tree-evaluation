@@ -40,7 +40,7 @@ def recursive_clean(node, h):
     if h == 0:
         bits = [field(int(bit)) for bit in f'{tree[node]:0{log_k}b}'[::-1]]
         for i, bit in enumerate(bits):
-            registers[2][i] += bit
+            registers[2][i] += bit #
         return
 
     left_child = 2 * node + 1
