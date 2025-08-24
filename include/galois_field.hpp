@@ -1,5 +1,6 @@
 #include <array>
 #include <cassert>
+#include <bit>
 
 struct GF_2;
 
@@ -69,9 +70,9 @@ struct GF_2 {
       return x;
 
     while (x >= fieldSize) {
-      // __builtin_clzll returns the number of leading zeros in a 64-bit
+      // std::countl_zero returns the number of leading zeros in a 64-bit
       // integer.
-      auto const shift = 64 - __builtin_clzll(x) - n;
+      auto const shift = 64 - std::countl_zero(x) - n; // better then __builtin_clzll (not part of the standard)
       x ^= (poly << shift);
     }
     return x;
