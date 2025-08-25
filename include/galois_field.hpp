@@ -1,9 +1,17 @@
+/**
+ * Galois Field Implementation for Tree Evaluation Algorithm
+ * This file implements finite field arithmetic over GF(2^n) as required by the
+ * "Tree Evaluation is in Space O(log n log log n)" paper.
+ */
+
 #include <array>
-#include <cassert>
 #include <bit>
+#include <cassert>
 
 struct GF_2;
-
+/**
+ * FieldElement: Wrapper for elements in GF(2^n)
+ */
 struct FieldElement {
   uint64_t value;
   const GF_2 *field;
@@ -11,6 +19,7 @@ struct FieldElement {
   FieldElement(uint64_t v, const GF_2 *f);
   FieldElement() : value(0), field(nullptr) {}
 
+  // Field operations - all operations maintain the field structure
   FieldElement operator+(const FieldElement &other) const;
   FieldElement operator-(const FieldElement &other) const;
   FieldElement operator*(const FieldElement &other) const;
@@ -18,7 +27,12 @@ struct FieldElement {
   bool operator==(const FieldElement &other) const;
 };
 
-// https://web.eecs.utk.edu/~jplank/plank/papers/CS-07-593/primitive-polynomial-table.txt
+/**
+ * Irreducible Polynomials for GF(2^n) Construction are precomputed and
+ * represented in octal notation.
+ * source :
+ * https://web.eecs.utk.edu/~jplank/plank/papers/CS-07-593/primitive-polynomial-table.txt
+ */
 static constexpr std::array<uint64_t, 33> IRREDUCIBLE_POLYS = {
     0,            // n=0 (unused)
     0,            // n=1 (unused)
@@ -57,10 +71,10 @@ static constexpr std::array<uint64_t, 33> IRREDUCIBLE_POLYS = {
 
 struct GF_2 {
   uint64_t n;         // Field degree.
-  uint64_t poly;      // The irreducible polynomial for GF(2^m).
-  uint64_t omega = 2; // The generator element, the polynomials are primitive
-  uint64_t fieldSize; // 2^n
-  uint64_t m;         // fieldSize - 1
+  uint64_t poly;      // The irreducible polynomial defining the field.
+  uint64_t omega = 2; // Generator element (primitive root)
+  uint64_t fieldSize; // 2^n (total number of field elements)
+  uint64_t m;         // fieldSize - 1 (order of multiplicative group)
 
   explicit GF_2(const uint64_t n_)
       : n(n_), fieldSize(1 << n), m(fieldSize - 1), poly(IRREDUCIBLE_POLYS[n]) {
@@ -72,7 +86,9 @@ struct GF_2 {
     while (x >= fieldSize) {
       // std::countl_zero returns the number of leading zeros in a 64-bit
       // integer.
-      auto const shift = 64 - std::countl_zero(x) - n; // better then __builtin_clzll (not part of the standard)
+      auto const shift =
+          64 - std::countl_zero(x) -
+          n; // better then __builtin_clzll (not part of the standard)
       x ^= (poly << shift);
     }
     return x;

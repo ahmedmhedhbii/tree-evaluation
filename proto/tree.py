@@ -152,7 +152,7 @@ def clean_computation():
 
 def initialize_field(k):
     field_order = 1 << math.ceil(math.log2(2 * math.ceil(math.log2(k + 1)) + 2))
-    field = galois.GF(field_order)
+    field = galois.GF(field_order, repr="poly")
     return field, field_order
 
 

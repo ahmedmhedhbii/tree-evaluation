@@ -52,7 +52,7 @@ algorithm_parameters algorithm_parameters_init() {
 
   params.registers.resize(3);
   std::random_device rd;
-  std::mt19937 gen(rd());
+  std::mt19937 gen(rd()); // the
 
   std::uniform_int_distribution<uint64_t> distrib(0,
                                                   params.field->fieldSize - 1);
@@ -165,6 +165,7 @@ void recursive_clean() {
 }
 
 void recursive_clean_inverse() {
+  // registers  = {x, y, z}
   if (algo.u >= (1ULL << algo.h) - 1) {
     uint64_t leaf_index = algo.u - ((1ULL << algo.h) - 1);
     for (uint64_t i = 0; i < algo.log_k; ++i) {
