@@ -33,29 +33,11 @@ cmake --build build -j
 ```
 
 
-### Windows:
-```bash 
-# Use Ninja (if installed) 
-cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release 
-cmake --build build -j build\tree.exe 
-
-# Or use MinGW Makefiles 
-cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -B ./build 
-cmake --build ./build 
-
-# Or use MSYS Makefiles (in MSYS2 environment) 
-cmake -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Release -B ./build 
-cmake --build ./build
-
-# Or use Visual Studio generator (no Ninja) 
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64 
-cmake --build build --config Release -j
-```
-and then:
+### Windows (macOS / Linux too):
 ```bash
-bash build/tree.exe 
-# Or 
-build\Release\tree.exe
+g++ -std=c++20 -O3 -Iinclude \
+    src/main.cpp src/galois_field.cpp src/algorithm.cpp \ # no need for tests/test.cpp
+    -o tree.exe
 ```
 ## Example of usage:
 ```txt
