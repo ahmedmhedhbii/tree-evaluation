@@ -52,7 +52,8 @@ algorithm_parameters algorithm_parameters_init() {
 
   params.registers.resize(3);
   std::random_device rd;
-  std::mt19937 gen(rd()); // the
+  std::mt19937_64 gen(rd()); // Mersenne Twister that generates 64-bit unsigned
+                             // integers
 
   std::uniform_int_distribution<uint64_t> distrib(0,
                                                   params.field->fieldSize - 1);

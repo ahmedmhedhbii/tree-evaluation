@@ -4,7 +4,7 @@
 
 void test() {
   std::random_device rd;
-  std::mt19937 gen(rd());
+  std::mt19937_64 gen(rd());
 
   int total = 0, passed = 0;
   for (uint64_t h = 2; h < 6; ++h)

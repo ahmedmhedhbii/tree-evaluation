@@ -1,8 +1,35 @@
+"""
+Tree Evaluation Algorithm Implementation (warm-up version)
+
+This file implements the main algorithm from "Tree Evaluation is in Space
+O(log n \dot log log n)".
+
+The algorithm evaluates a complete binary tree where:
+ - Each internal node computes a function f_u: [k] * [k] -> [k]
+ - Each leaf contains a value from alphabet [k] = {0, 1, ..., k-1} (and keep
+ in mind with one node the height is 0 not 1)
+ - The goal is to compute the value at the root using O(log n * log log n)
+ space
+
+Please refer to the README for more details of the choice
+"""
+
 import copy
 import math
 import random
 
 import galois
+
+# Global algorithm parameters (corresponds to algorithm_parameters struct in C++)
+height: int = 0  # tree height (h)
+k = 0  # alphabet size
+tree = []  # tree structure: functions + leaf values
+registers = []  # the three registers used in the algorithm
+field: galois.GF = None  # pointer to GF(2^n) field
+log_k = 0  # ⌈log_2(k+1)⌉ (the +1 is explained in the README)
+u = 0  # the u of Goldreich, current node index
+omega: galois.GF = None  # generator element (primitive root)
+m = 0  # field_order - 1 (order of multiplicative group)
 
 
 def reverse(lst, start, end):
@@ -23,6 +50,18 @@ def rotate_left_inplace(lst, shift=1):
 
 
 def e_poly(r, beta):
+    """
+    Polynomial Evaluation Function e_poly
+
+    Computes the polynomial e (as in the paper)
+
+    Args:
+        r: Register index (0 or 2)
+        beta: Bit vector to evaluate polynomial at f_u
+
+    Returns:
+        Polynomial evaluation result
+    """
     res = field(1)
     one = field(1)
     for i in range(log_k):
@@ -33,6 +72,18 @@ def e_poly(r, beta):
 
 
 def q_u_i(i):
+    """
+    q_u_i computes the polynomial q_{u,i} as in the paper
+
+    From the paper: q_u_i represents the contribution of bit i (more complicated
+    than that) when evaluating function f_u at the current node u.
+
+    Args:
+        i: Bit position to compute
+
+    Returns:
+        Field element representing q_{u,i}
+    """
     global u
     res = field(0)
     for alpha in range(k):
@@ -52,6 +103,15 @@ def q_u_i(i):
 
 
 def recursive_clean():
+    """
+    Recursive Clean Computation
+
+    Implements the main recursive algorithm for tree evaluation (Lemma 4.5,
+    warm-up version), register programs which cleanly compute the value at the
+    root. This is the core of the space-efficient algorithm from the paper.
+
+    Note: registers are rotated as in the Godreich paper
+    """
     global u
     if u >= (1 << height) - 1:
         bits = [field(int(bit)) for bit in f"{tree[u]:0{log_k}b}"[::-1]]
@@ -96,6 +156,12 @@ def recursive_clean():
 
 
 def recursive_clean_inverse():
+    """
+    Inverse Clean Computation
+
+    -q_{u,i} is replaced by +q_{u,i}
+    This undoes the operations performed by recursive_clean.
+    """
     global u
     if u >= (1 << height) - 1:
         bits = [field(int(bit)) for bit in f"{tree[u]:0{log_k}b}"[::-1]]
@@ -140,6 +206,13 @@ def recursive_clean_inverse():
 
 
 def clean_computation():
+    """
+    Runs the recursive clean computation and extracts the final result
+    from the register differences.
+
+    Returns:
+        The value computed at the root of the tree
+    """
     initial_registers = copy.deepcopy(registers)
     recursive_clean()
     res = 0
@@ -151,12 +224,38 @@ def clean_computation():
 
 
 def initialize_field(k):
+    """
+    Field Initialization
+
+    Initializes the finite field GF(2^n) where n is chosen to be large enough
+    to represent all intermediate values during computation.
+
+    From the paper: n = ⌈log_2(2⌈(log_2(k+1)⌉ + 2) (the + 1 is
+    explained in the README) This ensures the field can represent all possible
+    polynomial coefficients.
+
+    Args:
+        k: Alphabet size
+
+    Returns:
+        Tuple of (field object, field_order - 1)
+    """
     field_order = 1 << math.ceil(math.log2(2 * math.ceil(math.log2(k + 1)) + 2))
     field = galois.GF(field_order, repr="poly")
     return field, field_order
 
 
 def initialize_tree_and_catalyst():
+    """
+    Algorithm Parameters Initialization
+
+    Sets up all data structures needed for the tree evaluation algorithm.
+    Prompts user for tree height, alphabet size, function definitions, and leaf
+    values.
+
+    Returns:
+        Tuple of (height, k, tree, registers, field, m)
+    """
     h = int(input("Enter the height of the tree: "))
     k = int(input("Enter the size of the alphabet: "))
     function = [
@@ -185,6 +284,18 @@ def initialize_tree_and_catalyst():
 
 
 def naive_algorithm(node, h):
+    """
+    Naive Tree Evaluation (for Verification)
+
+    Implements the straightforward recursive tree evaluation for correctness
+    checking.
+
+    Args:
+        node: Current node index
+        h: Current height (0 = leaf level)
+    Returns:
+        Value computed at the given node
+    """
     if h == 0:
         return tree[node]
 
@@ -195,12 +306,11 @@ def naive_algorithm(node, h):
 
 
 if __name__ == "__main__":
+    # Initialize all global parameters
     height, k, tree, registers, field, m = initialize_tree_and_catalyst()
     log_k = math.ceil(math.log2(k + 1))
     omega = field.primitive_element
     registers_copy = copy.deepcopy(registers)
-
-    u = 0  # the u of Goldreich
 
     result, final_registers = clean_computation()
 

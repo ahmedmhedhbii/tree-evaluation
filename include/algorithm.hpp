@@ -5,7 +5,7 @@
  * O(log n \dot log log n)".
  *
  * The algorithm evaluates a complete binary tree where:
- *  - Each internal node computes a function f_u: [k] \times [k] -> [k]
+ *  - Each internal node computes a function f_u: [k] * [k] -> [k]
  *  - Each leaf contains a value from alphabet [k] = {0, 1, ..., k-1} (and keep
  *  in mind with one node the height is 0 not 1)
  *  - The goal is to compute the value at the root using O(log n * log log n)
@@ -26,15 +26,17 @@
  */
 
 struct algorithm_parameters {
-  uint64_t h;
-  uint64_t k;
-  std::vector<std::vector<FieldElement>> f_u;
-  std::vector<std::vector<std::vector<FieldElement>>> tree_functions;
-  std::vector<FieldElement> tree_leaves;
-  GF_2 *field;
+  uint64_t h; // tree height
+  uint64_t k; // alphabet size
+  std::vector<std::vector<FieldElement>>
+      f_u; // table encoding of internal node functions
+  std::vector<std::vector<std::vector<FieldElement>>>
+      tree_functions;                    // all function tables per node
+  std::vector<FieldElement> tree_leaves; // leaf values (over [k])
+  GF_2 *field;                           // pointer to GF(2^n)
   std::vector<std::vector<FieldElement>> registers;
-  uint64_t u; // the u of Goldreich
-  uint64_t log_k;
+  uint64_t u;     // the u of Goldreich, current node index
+  uint64_t log_k; // ⌈log_2(k+1)⌉ (the +1 is explained in the README)
 };
 
 extern algorithm_parameters algo;
@@ -61,7 +63,7 @@ GF_2 *initialize_field(const uint64_t k);
  * Prompts user for tree height, alphabet size, function definitions, and leaf
  * values.
  *
- * @return Initialized algorithm parameters
+ * @return populated algorithm_parameters
  */
 algorithm_parameters algorithm_parameters_init();
 
@@ -85,41 +87,39 @@ std::vector<FieldElement> get_bit_vector(uint64_t x);
  * Computes the polynomial e (as in the paper)
  *
  * @param r Register index (0 or 2)
- * @param beta Bit vector to evaluate polynomial at
+ * @param beta Bit vector to evaluate polynomial at f_u
  * @return Polynomial evaluation result
  */
 FieldElement e_poly(int r, const std::vector<FieldElement> &beta);
 
 /**
- * q_u_i Computation
+ * q_u_i computes the polynomial q_{u,i} as in the paper
  *
  *
- * From the paper: q_u_i represents the "cleaned" contribution of bit i
- * when evaluating function f_u at the current node u.
+ * From the paper: q_u_i represents the contribution of bit i (more compicated
+ * than that) when evaluating function f_u at the current node u.
  *
  * @param i Bit position to compute
  * @return Field element representing q_{u,i}
  */
 FieldElement q_u_i(uint64_t i);
+
 /**
  * Recursive Clean Computation
  *
- * Implements the main recursive algorithm for tree evaluation (warm-up
- * version). This is the core of the space-efficient algorithm from the paper.
+ * Implements the main recursive algorithm for tree evaluation (Lemma 4.5,
+ * warm-up version), register programs which cleanly compute the value at the
+ * root. This is the core of the space-efficient algorithm from the paper.
  *
- *
- *
+ * Note: registers are rotated as in the Godreich paper
  */
 void recursive_clean();
 
 /**
  * Inverse Clean Computation
  *
- * Implements the inverse of the clean computation to "undo" the effects
- * of the forward pass. This is used in the error detection mechanism.
+ * -q_{u,i} is replaced by +q_{u,i}
  *
- * By running clean followed by clean_inverse, any discrepancy in the
- * registers indicates an error in the computation.
  */
 void recursive_clean_inverse();
 
