@@ -7,6 +7,24 @@
 #include <array>
 #include <bit>
 #include <cassert>
+#include <cstdint>
+#include <stdexcept>
+
+inline int leading_zeros(uint64_t x) {
+#if defined(__cpp_lib_bitops) && __cpp_lib_bitops >= 201907L
+  return std::countl_zero(x);
+#elif defined(__GNUG__) || defined(__clang__)
+  return x ? __builtin_clzll(x) : 64;
+#else
+  // portable fallback
+  if (!x)
+    return 64;
+  int n = 0;
+  while ((x >> (63 - n)) == 0)
+    ++n;
+  return n;
+#endif
+}
 
 struct GF_2;
 /**
@@ -84,11 +102,7 @@ struct GF_2 {
       return x;
 
     while (x >= fieldSize) {
-      // std::countl_zero returns the number of leading zeros in a 64-bit
-      // integer.
-      auto const shift =
-          64 - std::countl_zero(x) -
-          n; // better then __builtin_clzll (not part of the standard)
+      auto const shift = 64 - leading_zeros(x) - n;
       x ^= (poly << shift);
     }
     return x;
