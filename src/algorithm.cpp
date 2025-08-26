@@ -117,9 +117,11 @@ void recursive_clean() {
     return;
   }
 
+  FieldElement omega = {algo.field->omega, algo.field};
+  FieldElement w_j = {1, algo.field};
+
   for (int j = 1; j <= algo.field->m; ++j) {
-    auto w_j =
-        FieldElement(algo.field->powGF(algo.field->omega, j), algo.field);
+    w_j = w_j * omega;
 
     for (int i = 0; i < algo.log_k; ++i) {
       algo.registers[0][i] = algo.registers[0][i] * w_j;
@@ -177,9 +179,11 @@ void recursive_clean_inverse() {
     return;
   }
 
+  FieldElement omega = {algo.field->omega, algo.field};
+  FieldElement w_j = {1, algo.field};
+
   for (int j = 1; j <= algo.field->m; ++j) {
-    auto w_j =
-        FieldElement(algo.field->powGF(algo.field->omega, j), algo.field);
+    w_j = w_j * omega;
 
     for (int i = 0; i < algo.log_k; ++i) {
       algo.registers[0][i] = algo.registers[0][i] * w_j;
