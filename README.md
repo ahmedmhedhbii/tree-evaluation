@@ -36,7 +36,7 @@ cmake --build build -j
 ### Windows (macOS / Linux too):
 ```bash
 g++ -std=c++20 -O3 -Iinclude \
-    src/main.cpp src/galois_field.cpp src/algorithm.cpp \ # no need for tests/test.cpp
+    src/main.cpp src/galois_field.cpp src/algorithm.cpp \
     -o tree.exe
 ```
 ## Example of usage:
